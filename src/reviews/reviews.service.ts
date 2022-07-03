@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import {InjectRepository} from '@nestjs/typeorm';
-import {PlacesService} from 'src/places/places.service';
-import {UsersService} from 'src/users/users.service';
-import {Repository} from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { PlacesService } from 'src/places/places.service';
+import { UsersService } from 'src/users/users.service';
+import { Repository } from 'typeorm';
 import { Review } from './entities/review.entity';
+import { CreateReviewDto } from './dto/create-review.dto';
 
 @Injectable()
 export class ReviewsService {
@@ -13,7 +14,12 @@ export class ReviewsService {
         private placesService: PlacesService,
     ) {}
 
-    async create(reviewId: string, authorId: string, placeId: string, content: string) {
+    async getOne(id: string): Promise<Review> {
+        return this.reviewRepository.findOne({ where: { id } });
+    }
+
+    async create(validated: CreateReviewDto) {
+        const { reviewId, authorId, placeId, content } = validated;
         const review = new Review();
         review.id = reviewId;
         review.content = content;

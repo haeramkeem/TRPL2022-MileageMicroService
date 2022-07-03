@@ -8,6 +8,7 @@ import { PlacesModule } from 'src/places/places.module';
         UsersModule,
         PlacesModule,
     ],
-    providers: [ReviewsService]
+    providers: [ ReviewsService ],
+    exports: [ ReviewsService ]
 })
 export class ReviewsModule {}

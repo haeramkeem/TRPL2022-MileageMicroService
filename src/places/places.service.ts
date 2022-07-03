@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
-import {InjectRepository} from '@nestjs/typeorm';
-import {Review} from 'src/reviews/entities/review.entity';
-import {Repository} from 'typeorm';
-import {UpdatePlaceDto} from './dto/update-place.dto';
-import {Place} from './entities/place.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ReviewsService } from 'src/reviews/reviews.service';
+import { Repository } from 'typeorm';
+import { UpdatePlaceDto } from './dto/update-place.dto';
+import { Place } from './entities/place.entity';
 
 @Injectable()
 export class PlacesService {
     constructor(
         @InjectRepository(Place) private placeRepository: Repository<Place>,
-        @InjectRepository(Review) private reviewRepository: Repository<Review>,
+        private reviewsService: ReviewsService,
     ) {}
 
     async getOne(id: string): Promise<Place> {
@@ -28,7 +28,7 @@ export class PlacesService {
             return; // Abort: Update place only when firstReview is nil
         }
 
-        const firstReview = await this.reviewRepository.findOne({ where: { id: validated.firstReviewId } });
+        const firstReview = await this.reviewsService.getOne(validated.firstReviewId);
         if (!firstReview) {
             console.error("ReviewNotFound")
             return; // TODO: NotFoundException for firstReview
