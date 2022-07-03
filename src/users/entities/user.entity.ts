@@ -3,7 +3,7 @@ import { Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity('userData')
 export class User {
-    @PrimaryColumn()
+    @PrimaryColumn('uuid')
     id: string;
 
     @OneToMany(() => Review, review => review.author)

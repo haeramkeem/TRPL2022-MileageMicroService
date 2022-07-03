@@ -3,7 +3,7 @@ import { Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn } from 'typeorm'
 
 @Entity('placeData')
 export class Place {
-    @PrimaryColumn()
+    @PrimaryColumn('uuid')
     id: string;
 
     @OneToOne(() => Review, { onDelete: "SET NULL" })

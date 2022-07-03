@@ -5,7 +5,7 @@ import { Column, Entity, ManyToOne, PrimaryColumn, Unique } from 'typeorm';
 @Entity('reviewData')
 @Unique(['author', 'place'])
 export class Review {
-    @PrimaryColumn()
+    @PrimaryColumn('uuid')
     id: string;
 
     @ManyToOne(() => User, user => user.reviews, { onDelete: "CASCADE" })
