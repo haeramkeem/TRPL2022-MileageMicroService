@@ -12,6 +12,10 @@ export class PlacesService {
         @InjectRepository(Review) private reviewRepository: Repository<Review>,
     ) {}
 
+    async getOne(id: string): Promise<Place> {
+        return this.placeRepository.findOne({ where: { id } });
+    }
+
     async update(validated: UpdatePlaceDto) {
         const id = validated.placeId;
         const place = await this.placeRepository.findOne({ where: { id } });

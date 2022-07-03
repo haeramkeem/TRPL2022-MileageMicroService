@@ -1,26 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import { CreateReviewDto } from './dto/create-review.dto';
-import { UpdateReviewDto } from './dto/update-review.dto';
+import {InjectRepository} from '@nestjs/typeorm';
+import {PlacesService} from 'src/places/places.service';
+import {UsersService} from 'src/users/users.service';
+import {Repository} from 'typeorm';
+import { Review } from './entities/review.entity';
 
 @Injectable()
 export class ReviewsService {
-  create(createReviewDto: CreateReviewDto) {
-    return 'This action adds a new review';
-  }
+    constructor(
+        @InjectRepository(Review) private reviewRepository: Repository<Review>,
+        private usersService: UsersService,
+        private placesService: PlacesService,
+    ) {}
 
-  findAll() {
-    return `This action returns all reviews`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} review`;
-  }
-
-  update(id: number, updateReviewDto: UpdateReviewDto) {
-    return `This action updates a #${id} review`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} review`;
-  }
+    async create(reviewId: string, authorId: string, placeId: string, content: string) {
+        const review = new Review();
+        review.id = reviewId;
+        review.content = content;
+        review.author = await this.usersService.getOne(authorId); // TODO: NotFoundException for author
+        review.place = await this.placesService.getOne(placeId); // TODO: NotFoundException for place
+        return await this.reviewRepository.save(review);
+    }
 }
