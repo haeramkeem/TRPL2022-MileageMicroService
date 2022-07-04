@@ -1,4 +1,4 @@
-import { Review } from 'src/reviews/entities/review.entity';
+import { Review } from './index';
 import { Entity, JoinColumn, OneToMany, OneToOne, PrimaryColumn } from 'typeorm';
 
 @Entity('placeData')

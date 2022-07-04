@@ -1,10 +1,6 @@
 import { Module } from '@nestjs/common';
 import {TypeOrmModule} from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { UsersModule } from './users/users.module';
-import { PlacesModule } from './places/places.module';
-import { ReviewsModule } from './reviews/reviews.module';
+import { EventsModule } from './events/events.module';
 
 @Module({
     imports: [
@@ -18,11 +14,7 @@ import { ReviewsModule } from './reviews/reviews.module';
             entities:       [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize:    (process.env.NODE_ENV == "development"),
         }),
-        UsersModule,
-        PlacesModule,
-        ReviewsModule
+        EventsModule,
     ],
-    controllers: [AppController],
-    providers: [AppService],
 })
 export class AppModule {}
