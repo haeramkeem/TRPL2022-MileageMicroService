@@ -1,3 +1,5 @@
+// Barell file for Entities
+
 import { User } from './user.entity';
 import { Place } from './place.entity';
 import { Photo } from './photo.entity';
