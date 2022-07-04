@@ -1,6 +1,5 @@
-import { Place } from 'src/places/entities/place.entity';
-import { User } from 'src/users/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryColumn, Unique } from 'typeorm';
+import { Place, User, Photo } from './index';
+import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn, Unique } from 'typeorm';
 
 @Entity('reviewData')
 @Unique(['author', 'place'])
@@ -13,6 +12,9 @@ export class Review {
 
     @ManyToOne(() => Place, place => place.reviews, { onDelete: "CASCADE" })
     place: Place;
+
+    @OneToMany(() => Photo, photo => photo.attachedReview)
+    photos: Photo[];
 
     @Column()
     content: string;
