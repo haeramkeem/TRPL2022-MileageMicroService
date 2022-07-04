@@ -11,7 +11,7 @@
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "db:up": "docker compose -f docker-compose.db.yaml --env-file ./.example.env up -d",
-    "db:down": "docker compose -f docker-compose.db.yaml down",
+    "db:down": "docker compose -f docker-compose.db.yaml --env-file ./.example.env down",
     "start:dev": ". ./.example.env; nest start --watch",
     "start:debug": ". ./.example.env; nest start --debug --watch",
     "start:prod": "node dist/main",
