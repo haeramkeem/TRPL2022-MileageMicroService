@@ -93,7 +93,39 @@ export class EventsService {
         }
     }
 
-    remove(id: string) {
-        return `This action removes a #${id} event`;
+    async remove(id: string) {
+        const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
+        await queryRunner.connect();
+
+        const review = await queryRunner.manager.findOneBy(Review, { id });
+        await queryRunner.startTransaction();
+
+        try {
+            // Update content
+            // TODO: subscribe to delete review
+            await queryRunner.manager.softDelete(Review, { id });
+
+            // Soft delete photos
+            // TODO: subscribe to delete photo event
+            await queryRunner.manager.softDelete(Photo, { attachedReview: review });
+
+            // Clear firstReview
+            // TODO: subscribe to update place event
+            await queryRunner.manager.update(Place, {
+                firstReview: review,
+            }, {
+                firstReview: null,
+            });
+
+            // Commit transaction
+            await queryRunner.commitTransaction();
+        } catch (err) {
+            // Rollback for DB fault
+            await queryRunner.rollbackTransaction();
+            // TODO: rollback subscribed action
+        } finally {
+            // Defer
+            await queryRunner.release();
+        }
     }
 }

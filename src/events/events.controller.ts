@@ -14,9 +14,9 @@ export class EventsController {
                 case ActionType.ADD:
                     return await this.eventsService.create(body as dto.CreateEventDto);
                 case ActionType.MOD:
-                    return this.eventsService.update(body.reviewId, body as dto.UpdateEventDto);
+                    return await this.eventsService.update(body.reviewId, body as dto.UpdateEventDto);
                 case ActionType.DEL:
-                    return this.eventsService.remove(body.reviewId);
+                    return await this.eventsService.remove(body.reviewId);
             }
         } catch(err) {
             // TODO: General error handling
