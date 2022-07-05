@@ -1,5 +1,5 @@
 import { Review } from "./index";
-import { Column, Entity, ManyToOne, PrimaryColumn } from "typeorm";
+import { DeleteDateColumn, Entity, ManyToOne, PrimaryColumn } from "typeorm";
 
 @Entity('photoData')
 export class Photo {
@@ -9,6 +9,6 @@ export class Photo {
     @ManyToOne(() => Review, review => review.photos, { onDelete: "CASCADE" })
     attachedReview: Review;
 
-    @Column('boolean', { default: false })
-    isDeleted: boolean = false;
+    @DeleteDateColumn()
+    deletedAt: Date|null;
 }
