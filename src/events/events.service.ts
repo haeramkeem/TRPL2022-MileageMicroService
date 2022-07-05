@@ -61,6 +61,16 @@ export class EventsService {
         await queryRunner.connect();
 
         const review = await queryRunner.manager.findOneBy(Review, { id });
+
+        const existingPhotos = (await queryRunner.manager.findBy(Photo, {
+            attachedReview: review
+        })).map(photo => photo.id);
+
+        const newPhotosSet = new Set(dto.attachedPhotoIds);
+        const existingPhotosSet = new Set(existingPhotos);
+
+        const toDelete = existingPhotos.filter(x => !newPhotosSet.has(x));
+        const toInsert = dto.attachedPhotoIds.filter(x => !existingPhotosSet.has(x));
         await queryRunner.startTransaction();
 
         try {
@@ -68,18 +78,20 @@ export class EventsService {
             // TODO: subscribe to review content update
             await queryRunner.manager.update(Review, { id }, { content: dto.content });
 
-            // Soft delete photos
+            // Soft delete unattached photos
             // TODO: subscribe to delete photo event
-            await queryRunner.manager.softDelete(Photo, { attachedReview: review });
+            toDelete.forEach(async (id) => {
+                await queryRunner.manager.softDelete(Photo, { id });
+            });
 
             // Insert photos
             // TODO: subscribe to save photo event
-            await queryRunner.manager.save(dto.attachedPhotoIds.map(photoId => {
+            toInsert.forEach(async (id) => {
                 const photo = new Photo();
-                photo.id = photoId;
+                photo.id = id;
                 photo.attachedReview = review;
-                return photo;
-            }));
+                await queryRunner.manager.save(photo);
+            });
 
             // Commit transaction
             await queryRunner.commitTransaction();

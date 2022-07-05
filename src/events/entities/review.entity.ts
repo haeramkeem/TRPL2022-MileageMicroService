@@ -1,5 +1,5 @@
 import { Place, User, Photo } from './index';
-import { Column, Entity, ManyToOne, OneToMany, PrimaryColumn, Unique } from 'typeorm';
+import { Column, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryColumn, Unique } from 'typeorm';
 
 @Entity('reviewData')
 @Unique(['author', 'place'])
@@ -18,4 +18,7 @@ export class Review {
 
     @Column()
     content: string;
+
+    @DeleteDateColumn()
+    deletedAt: Date|null;
 }
