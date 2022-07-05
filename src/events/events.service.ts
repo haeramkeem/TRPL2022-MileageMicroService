@@ -113,15 +113,15 @@ export class EventsService {
         await queryRunner.startTransaction();
 
         try {
-            // Update content
+            // Soft delete review
             // TODO: subscribe to delete review
             await queryRunner.manager.softDelete(Review, { id });
 
-            // Soft delete photos
+            // Manual cascade for soft deleting review
             // TODO: subscribe to delete photo event
             await queryRunner.manager.softDelete(Photo, { attachedReview: review });
 
-            // Clear firstReview
+            // Manual SET NULL for soft deleting review
             // TODO: subscribe to update place event
             await queryRunner.manager.update(Place, {
                 firstReview: review,
