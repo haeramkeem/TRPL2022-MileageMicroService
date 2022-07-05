@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
-import { DataSource } from 'typeorm';
+import { DataSource, IsNull } from 'typeorm';
 import { User, Place, Review, Photo } from './entities';
 
 @Injectable()
@@ -39,7 +39,7 @@ export class EventsService {
             // TODO: subscribe to update place event
             await queryRunner.manager.update(Place, {
                 id: dto.placeId,
-                firstReview: undefined, // TODO: firstReview will be either null or undefined
+                firstReview: IsNull(),
             }, {
                 firstReview: review,
             });
