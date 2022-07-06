@@ -2,7 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { DataSource, IsNull } from 'typeorm';
-import { User, Place, Review, Photo } from './entities';
+import { User, Place, Review, Photo, PointLog } from './entities';
+import { ActionType } from 'src/constants';
 
 @Injectable()
 export class EventsService {
@@ -17,8 +18,20 @@ export class EventsService {
         const review = new Review();
         review.id = dto.reviewId;
         review.content = dto.content;
-        review.author = await queryRunner.manager.findOneBy(User, { id: dto.userId }); // TODO: user not found
-        review.place = await queryRunner.manager.findOneBy(Place, { id: dto.placeId }); // TODO: place not found
+        // TODO: user not found
+        review.author = await queryRunner.manager.findOneBy(User, { id: dto.userId });
+        // TODO: place not found
+        review.place = await queryRunner.manager.findOneBy(Place, { id: dto.placeId });
+
+        // Calc point
+        let point = (await queryRunner.manager.findOne(PointLog, {
+            where: { owner: review.author },
+            order: { id: 'DESC' },
+        }) || { point: 0 }).point;
+        point += dto.content.length > 0 ? 1 : 0;
+        point += dto.attachedPhotoIds.length > 0 ? 1 : 0;
+
+        // Start transaction
         await queryRunner.startTransaction();
 
         try {
@@ -37,18 +50,29 @@ export class EventsService {
 
             // Update place
             // TODO: subscribe to update place event
-            await queryRunner.manager.update(Place, {
+            const updateResult = await queryRunner.manager.update(Place, {
                 id: dto.placeId,
                 firstReview: IsNull(),
             }, {
                 firstReview: review,
             });
+            point += updateResult.affected > 0 ? 1 : 0;
+
+            // Insert point log
+            if (point > 0) {
+                const pointLog = new PointLog();
+                pointLog.owner = review.author;
+                pointLog.action = ActionType.ADD;
+                pointLog.point = point;
+                await queryRunner.manager.save(pointLog);
+            }
 
             // Commit transaction
             await queryRunner.commitTransaction();
         } catch (err) {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
+            console.error(err);
             // TODO: rollback subscribed action
         } finally {
             // Defer
