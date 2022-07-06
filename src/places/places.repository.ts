@@ -13,7 +13,7 @@ export class PlacesRepository extends Repository<Place> {
         });
     }
 
-    async markAsDeleted(reviewId: string) {
+    async softDeleteOne(reviewId: string) {
         return await this.update({
             firstReview: { id: reviewId },
         }, {

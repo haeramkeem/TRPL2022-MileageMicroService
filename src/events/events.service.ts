@@ -1,19 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto, UpdateEventDto } from './dto';
-import { DataSource } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { ActionType } from 'src/constants';
-import { UsersService } from 'src/users/users.service';
-import { PlacesService } from 'src/places/places.service';
-import { PlacesRepository } from 'src/places/places.repository';
-import { PhotosRepository } from 'src/photos/photos.repository';
-import { ReviewsRepository } from 'src/reviews/reviews.repository';
+import { PlacesRepository } from 'src/places';
+import { PhotosRepository } from 'src/photos';
+import { ReviewsRepository, Review } from 'src/reviews';
 import { PointLogsRepository } from 'src/pointLogs';
+import { User } from 'src/users';
+import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
 export class EventsService {
     constructor(
-        private readonly usersService: UsersService,
-        private readonly placesService: PlacesService,
+        @InjectRepository(User)
+        private readonly usersRepository: Repository<User>,
         private readonly placesRepository: PlacesRepository,
         private readonly photosRepository: PhotosRepository,
         private readonly reviewsRepository: ReviewsRepository,
@@ -25,12 +25,11 @@ export class EventsService {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
-        const review = ReviewsRepository.getObj(
-            dto.reviewId,
-            dto.content,
-            await this.usersService.findOne(dto.userId),
-            await this.placesService.findOne(dto.placeId),
-        );
+        const review = new Review();
+        review.id = dto.reviewId;
+        review.content = dto.content;
+        review.author = await this.usersRepository.findOneBy({ id: dto.userId });
+        review.place = await this.placesRepository.findOneBy({ id: dto.placeId });
 
         // Calc point
         let commitPoint = 0;
@@ -85,7 +84,7 @@ export class EventsService {
         let rollbackPoint = review.content.length > 0 ? 1 : 0;
         let commitPoint = dto.content.length > 0 ? 1 : 0;
 
-        const existingPhotos = await photosRepositoryCtx.findByAttachedReview(review);
+        const existingPhotos = await photosRepositoryCtx.findWithAttachedReview(review);
         rollbackPoint += existingPhotos.length > 0 ? 1 : 0;
         commitPoint += dto.attachedPhotoIds.length > 0 ? 1 : 0;
 
@@ -151,7 +150,7 @@ export class EventsService {
             // Manual SET NULL for soft deleting review
             const updateResult = await queryRunner.manager
                 .withRepository(this.placesRepository)
-                .markAsDeleted(id);
+                .softDeleteOne(id);
             rollbackPoint += updateResult.affected > 0 ? 1 : 0;
 
             // Insert point log

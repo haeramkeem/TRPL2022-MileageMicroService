@@ -14,7 +14,7 @@ export class PhotosRepository extends Repository<Photo> {
         }));
     }
 
-    async findByAttachedReview(attachedReview: Review): Promise<Photo[]> {
+    async findWithAttachedReview(attachedReview: Review): Promise<Photo[]> {
         return await this.findBy({ attachedReview });
     }
 

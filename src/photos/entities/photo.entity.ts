@@ -1,4 +1,4 @@
-import { Review } from 'src/reviews/entities/review.entity';
+import { Review } from 'src/reviews';
 import { DeleteDateColumn, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
 
 @Entity('photoData')
