@@ -160,7 +160,22 @@ export class EventsService {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
-        const review = await queryRunner.manager.findOneBy(Review, { id });
+        const review = await queryRunner.manager.findOne(Review, {
+            where: { id },
+            relations: [ 'author', 'photos' ],
+        });
+
+        // Calc point
+        const point = (await queryRunner.manager.findOne(PointLog, {
+            where: { owner: review.author },
+            order: { id: 'DESC' },
+        }) || { point: 0 }).point;
+
+        let rollbackPoint = 0;
+        rollbackPoint += review.content.length > 0 ? 1 : 0;
+        rollbackPoint += review.photos.length > 0 ? 1 : 0;
+
+        // Start transaction
         await queryRunner.startTransaction();
 
         try {
@@ -174,11 +189,21 @@ export class EventsService {
 
             // Manual SET NULL for soft deleting review
             // TODO: subscribe to update place event
-            await queryRunner.manager.update(Place, {
+            const updateResult = await queryRunner.manager.update(Place, {
                 firstReview: review,
             }, {
                 firstReview: null,
             });
+
+            rollbackPoint += updateResult.affected > 0 ? 1 : 0;
+            // Insert point log
+            if (rollbackPoint > 0) {
+                const pointLog = new PointLog();
+                pointLog.owner = review.author;
+                pointLog.action = ActionType.MOD;
+                pointLog.point = point - rollbackPoint;
+                await queryRunner.manager.save(pointLog);
+            }
 
             // Commit transaction
             await queryRunner.commitTransaction();
