@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { CreateEventDto } from './dto/create-event.dto';
-import { UpdateEventDto } from './dto/update-event.dto';
+import { CreateEventDto, UpdateEventDto } from './dto';
 import { DataSource, IsNull } from 'typeorm';
 import { User, Place, Review, Photo, PointLog } from './entities';
 import { ActionType } from 'src/constants';
@@ -84,17 +83,34 @@ export class EventsService {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
-        const review = await queryRunner.manager.findOneBy(Review, { id });
+        // TODO: Review not found
+        const review = await queryRunner.manager.findOne(Review, {
+            where: { id },
+            relations: ['author'],
+        });
+        console.log(review);
+        let rollbackPoint = review.content.length > 0 ? 1 : 0;
+        let commitPoint = dto.content.length > 0 ? 1 : 0;
 
         const existingPhotos = (await queryRunner.manager.findBy(Photo, {
             attachedReview: review
         })).map(photo => photo.id);
+        rollbackPoint += existingPhotos.length > 0 ? 1 : 0;
+        commitPoint += dto.attachedPhotoIds.length > 0 ? 1 : 0;
 
         const newPhotosSet = new Set(dto.attachedPhotoIds);
         const existingPhotosSet = new Set(existingPhotos);
 
         const toDelete = existingPhotos.filter(x => !newPhotosSet.has(x));
         const toInsert = dto.attachedPhotoIds.filter(x => !existingPhotosSet.has(x));
+
+        // Calc point
+        const point = (await queryRunner.manager.findOne(PointLog, {
+            where: { owner: review.author },
+            order: { id: 'DESC' },
+        }) || { point: 0 }).point - rollbackPoint + commitPoint;
+
+        // Start transaction
         await queryRunner.startTransaction();
 
         try {
@@ -116,6 +132,15 @@ export class EventsService {
                 photo.attachedReview = review;
                 await queryRunner.manager.save(photo);
             });
+
+            // Insert point log
+            if (point > 0) {
+                const pointLog = new PointLog();
+                pointLog.owner = review.author;
+                pointLog.action = ActionType.MOD;
+                pointLog.point = point;
+                await queryRunner.manager.save(pointLog);
+            }
 
             // Commit transaction
             await queryRunner.commitTransaction();
