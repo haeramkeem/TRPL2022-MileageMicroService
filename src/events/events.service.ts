@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { DataSource, IsNull } from 'typeorm';
-import { User, Place, Review, Photo, PointLog } from './entities';
+import { Place, Review, Photo, PointLog } from './entities';
 import { ActionType } from 'src/constants';
+import {UsersService} from 'src/users/users.service';
 
 @Injectable()
 export class EventsService {
     constructor(
+        private readonly usersService: UsersService,
         private dataSource: DataSource,
     ) {}
 
@@ -17,8 +19,7 @@ export class EventsService {
         const review = new Review();
         review.id = dto.reviewId;
         review.content = dto.content;
-        // TODO: user not found
-        review.author = await queryRunner.manager.findOneBy(User, { id: dto.userId });
+        review.author = await this.usersService.findOne(dto.userId);
         // TODO: place not found
         review.place = await queryRunner.manager.findOneBy(Place, { id: dto.placeId });
 

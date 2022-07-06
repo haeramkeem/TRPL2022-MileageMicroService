@@ -1,4 +1,4 @@
-import { User } from './index';
+import { User } from 'src/users/entities/user.entity';
 import { ActionType } from 'src/constants';
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
