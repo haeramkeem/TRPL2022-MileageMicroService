@@ -9,7 +9,8 @@ import * as entities from './entities';
         entities.Review,
         entities.Photo,
         entities.User,
-        entities.Place
+        entities.Place,
+        entities.PointLog
     ]) ],
     controllers: [ EventsController ],
     providers: [ EventsService ]
