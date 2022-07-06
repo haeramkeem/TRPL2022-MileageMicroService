@@ -1,14 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto, UpdateEventDto } from './dto';
-import { DataSource, IsNull } from 'typeorm';
-import { Place, Review, Photo, PointLog } from './entities';
+import { DataSource } from 'typeorm';
+import { Review, Photo, PointLog } from './entities';
 import { ActionType } from 'src/constants';
-import {UsersService} from 'src/users/users.service';
+import { UsersService } from 'src/users/users.service';
+import { PlacesService } from 'src/places/places.service';
+import { PlacesRepository } from 'src/places/places.repository';
 
 @Injectable()
 export class EventsService {
     constructor(
         private readonly usersService: UsersService,
+        private readonly placesService: PlacesService,
+        private readonly placesRepository: PlacesRepository,
         private dataSource: DataSource,
     ) {}
 
@@ -20,8 +24,7 @@ export class EventsService {
         review.id = dto.reviewId;
         review.content = dto.content;
         review.author = await this.usersService.findOne(dto.userId);
-        // TODO: place not found
-        review.place = await queryRunner.manager.findOneBy(Place, { id: dto.placeId });
+        review.place = await this.placesService.findOne(dto.placeId);
 
         // Calc point
         const point = (await queryRunner.manager.findOne(PointLog, {
@@ -51,13 +54,9 @@ export class EventsService {
             }));
 
             // Update place
-            // TODO: subscribe to update place event
-            const updateResult = await queryRunner.manager.update(Place, {
-                id: dto.placeId,
-                firstReview: IsNull(),
-            }, {
-                firstReview: review,
-            });
+            const updateResult = await queryRunner.manager
+                .withRepository(this.placesRepository)
+                .updateFirstReview(dto.placeId, dto.reviewId);
             commitPoint += updateResult.affected > 0 ? 1 : 0;
 
             // Insert point log
@@ -91,7 +90,6 @@ export class EventsService {
             where: { id },
             relations: ['author'],
         });
-        console.log(review);
         let rollbackPoint = review.content.length > 0 ? 1 : 0;
         let commitPoint = dto.content.length > 0 ? 1 : 0;
 
@@ -150,6 +148,7 @@ export class EventsService {
         } catch (err) {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
+            console.error(err);
             // TODO: rollback subscribed action
         } finally {
             // Defer
@@ -189,14 +188,11 @@ export class EventsService {
             await queryRunner.manager.softDelete(Photo, { attachedReview: review });
 
             // Manual SET NULL for soft deleting review
-            // TODO: subscribe to update place event
-            const updateResult = await queryRunner.manager.update(Place, {
-                firstReview: review,
-            }, {
-                firstReview: null,
-            });
-
+            const updateResult = await queryRunner.manager
+                .withRepository(this.placesRepository)
+                .markAsDeleted(id);
             rollbackPoint += updateResult.affected > 0 ? 1 : 0;
+
             // Insert point log
             if (rollbackPoint > 0) {
                 const pointLog = new PointLog();
@@ -211,6 +207,7 @@ export class EventsService {
         } catch (err) {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
+            console.error(err);
             // TODO: rollback subscribed action
         } finally {
             // Defer

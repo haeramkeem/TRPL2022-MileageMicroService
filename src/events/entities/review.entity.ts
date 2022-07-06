@@ -1,5 +1,6 @@
 import { User } from 'src/users/entities/user.entity';
-import { Place, Photo } from './index';
+import { Place } from 'src/places/entities/place.entity';
+import { Photo } from './index';
 import { Column, DeleteDateColumn, Entity, ManyToOne, OneToMany, PrimaryColumn, Unique } from 'typeorm';
 
 @Entity('reviewData')
