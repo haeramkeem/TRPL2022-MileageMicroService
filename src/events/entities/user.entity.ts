@@ -1,4 +1,4 @@
-import { Review } from './index';
+import { Review, PointLog } from './index';
 import { Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity('userData')
@@ -8,4 +8,7 @@ export class User {
 
     @OneToMany(() => Review, review => review.author)
     reviews: Review[];
+
+    @OneToMany(() => PointLog, pointLog => pointLog.owner)
+    pointLogs: PointLog[];
 }
