@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { DataSource } from 'typeorm';
-import { Review, Photo, PointLog } from './entities';
+import { Review, PointLog } from './entities';
 import { ActionType } from 'src/constants';
 import { UsersService } from 'src/users/users.service';
 import { PlacesService } from 'src/places/places.service';
 import { PlacesRepository } from 'src/places/places.repository';
+import { PhotosRepository } from 'src/photos/photos.repository';
 
 @Injectable()
 export class EventsService {
@@ -13,6 +14,7 @@ export class EventsService {
         private readonly usersService: UsersService,
         private readonly placesService: PlacesService,
         private readonly placesRepository: PlacesRepository,
+        private readonly photosRepository: PhotosRepository,
         private dataSource: DataSource,
     ) {}
 
@@ -45,13 +47,9 @@ export class EventsService {
             await queryRunner.manager.save(review);
 
             // Insert photos
-            // TODO: subscribe to save photo event
-            await queryRunner.manager.save(dto.attachedPhotoIds.map(photoId => {
-                const photo = new Photo();
-                photo.id = photoId;
-                photo.attachedReview = review;
-                return photo;
-            }));
+            await queryRunner.manager
+                .withRepository(this.photosRepository)
+                .saveMany(dto.attachedPhotoIds, review);
 
             // Update place
             const updateResult = await queryRunner.manager
@@ -93,17 +91,17 @@ export class EventsService {
         let rollbackPoint = review.content.length > 0 ? 1 : 0;
         let commitPoint = dto.content.length > 0 ? 1 : 0;
 
-        const existingPhotos = (await queryRunner.manager.findBy(Photo, {
-            attachedReview: review
-        })).map(photo => photo.id);
+        const photosRepositoryCtx = queryRunner.manager.withRepository(this.photosRepository);
+        const existingPhotos = await photosRepositoryCtx.findByAttachedReview(review);
+
         rollbackPoint += existingPhotos.length > 0 ? 1 : 0;
         commitPoint += dto.attachedPhotoIds.length > 0 ? 1 : 0;
 
         const newPhotosSet = new Set(dto.attachedPhotoIds);
-        const existingPhotosSet = new Set(existingPhotos);
+        const existingPhotosSet = new Set(existingPhotos.map(photo => photo.id));
 
-        const toDelete = existingPhotos.filter(x => !newPhotosSet.has(x));
-        const toInsert = dto.attachedPhotoIds.filter(x => !existingPhotosSet.has(x));
+        const toDelete = existingPhotos.filter(photo => !newPhotosSet.has(photo.id));
+        const toInsert = dto.attachedPhotoIds.filter(photo => !existingPhotosSet.has(photo));
 
         // Calc point
         const point = (await queryRunner.manager.findOne(PointLog, {
@@ -120,19 +118,10 @@ export class EventsService {
             await queryRunner.manager.update(Review, { id }, { content: dto.content });
 
             // Soft delete unattached photos
-            // TODO: subscribe to delete photo event
-            toDelete.forEach(async (id) => {
-                await queryRunner.manager.softDelete(Photo, { id });
-            });
+            await photosRepositoryCtx.softDeleteMany(toDelete);
 
             // Insert photos
-            // TODO: subscribe to save photo event
-            toInsert.forEach(async (id) => {
-                const photo = new Photo();
-                photo.id = id;
-                photo.attachedReview = review;
-                await queryRunner.manager.save(photo);
-            });
+            await photosRepositoryCtx.saveMany(toInsert, review);
 
             // Insert point log
             if (rollbackPoint != commitPoint) {
@@ -184,8 +173,9 @@ export class EventsService {
             await queryRunner.manager.softDelete(Review, { id });
 
             // Manual cascade for soft deleting review
-            // TODO: subscribe to delete photo event
-            await queryRunner.manager.softDelete(Photo, { attachedReview: review });
+            await queryRunner.manager
+                .withRepository(this.photosRepository)
+                .softCascadeMany(review);
 
             // Manual SET NULL for soft deleting review
             const updateResult = await queryRunner.manager
