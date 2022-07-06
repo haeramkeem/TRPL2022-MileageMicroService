@@ -23,12 +23,14 @@ export class EventsService {
         review.place = await queryRunner.manager.findOneBy(Place, { id: dto.placeId });
 
         // Calc point
-        let point = (await queryRunner.manager.findOne(PointLog, {
+        const point = (await queryRunner.manager.findOne(PointLog, {
             where: { owner: review.author },
             order: { id: 'DESC' },
         }) || { point: 0 }).point;
-        point += dto.content.length > 0 ? 1 : 0;
-        point += dto.attachedPhotoIds.length > 0 ? 1 : 0;
+
+        let commitPoint = 0;
+        commitPoint += dto.content.length > 0 ? 1 : 0;
+        commitPoint += dto.attachedPhotoIds.length > 0 ? 1 : 0;
 
         // Start transaction
         await queryRunner.startTransaction();
@@ -55,14 +57,14 @@ export class EventsService {
             }, {
                 firstReview: review,
             });
-            point += updateResult.affected > 0 ? 1 : 0;
+            commitPoint += updateResult.affected > 0 ? 1 : 0;
 
             // Insert point log
-            if (point > 0) {
+            if (commitPoint > 0) {
                 const pointLog = new PointLog();
                 pointLog.owner = review.author;
                 pointLog.action = ActionType.ADD;
-                pointLog.point = point;
+                pointLog.point = point + commitPoint;
                 await queryRunner.manager.save(pointLog);
             }
 
@@ -108,7 +110,7 @@ export class EventsService {
         const point = (await queryRunner.manager.findOne(PointLog, {
             where: { owner: review.author },
             order: { id: 'DESC' },
-        }) || { point: 0 }).point - rollbackPoint + commitPoint;
+        }) || { point: 0 }).point;
 
         // Start transaction
         await queryRunner.startTransaction();
@@ -134,11 +136,11 @@ export class EventsService {
             });
 
             // Insert point log
-            if (point > 0) {
+            if (rollbackPoint != commitPoint) {
                 const pointLog = new PointLog();
                 pointLog.owner = review.author;
                 pointLog.action = ActionType.MOD;
-                pointLog.point = point;
+                pointLog.point = point - rollbackPoint + commitPoint;
                 await queryRunner.manager.save(pointLog);
             }
 
