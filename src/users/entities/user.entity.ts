@@ -1,4 +1,5 @@
-import { Review, PointLog } from 'src/events/entities';
+import { PointLog } from 'src/events/entities';
+import { Review } from 'src/reviews/entities/review.entity';
 import { Entity, OneToMany, PrimaryColumn } from 'typeorm';
 
 @Entity('userData')

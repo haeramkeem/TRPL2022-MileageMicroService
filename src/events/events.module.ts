@@ -8,15 +8,16 @@ import { PlacesModule } from 'src/places/places.module';
 import { TypeOrmExModule } from 'src/typeorm-ex/typeorm-ex.module';
 import { PlacesRepository } from 'src/places/places.repository';
 import { PhotosRepository } from 'src/photos/photos.repository';
+import { ReviewsRepository } from 'src/reviews/reviews.repository';
 
 @Module({
     imports: [
         TypeOrmExModule.forCustomRepository([
             PlacesRepository,
             PhotosRepository,
+            ReviewsRepository,
         ]),
         TypeOrmModule.forFeature([
-            entities.Review,
             entities.PointLog
         ]),
         UsersModule,

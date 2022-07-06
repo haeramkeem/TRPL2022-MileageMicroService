@@ -1,12 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { DataSource } from 'typeorm';
-import { Review, PointLog } from './entities';
+import { PointLog } from './entities';
 import { ActionType } from 'src/constants';
 import { UsersService } from 'src/users/users.service';
 import { PlacesService } from 'src/places/places.service';
 import { PlacesRepository } from 'src/places/places.repository';
 import { PhotosRepository } from 'src/photos/photos.repository';
+import { ReviewsRepository } from 'src/reviews/reviews.repository';
 
 @Injectable()
 export class EventsService {
@@ -15,6 +16,7 @@ export class EventsService {
         private readonly placesService: PlacesService,
         private readonly placesRepository: PlacesRepository,
         private readonly photosRepository: PhotosRepository,
+        private readonly reviewsRepository: ReviewsRepository,
         private dataSource: DataSource,
     ) {}
 
@@ -22,11 +24,12 @@ export class EventsService {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
-        const review = new Review();
-        review.id = dto.reviewId;
-        review.content = dto.content;
-        review.author = await this.usersService.findOne(dto.userId);
-        review.place = await this.placesService.findOne(dto.placeId);
+        const review = ReviewsRepository.getObj(
+            dto.reviewId,
+            dto.content,
+            await this.usersService.findOne(dto.userId),
+            await this.placesService.findOne(dto.placeId),
+        );
 
         // Calc point
         const point = (await queryRunner.manager.findOne(PointLog, {
@@ -43,8 +46,9 @@ export class EventsService {
 
         try {
             // Insert review
-            // TODO: subscribe to save review event
-            await queryRunner.manager.save(review);
+            await queryRunner.manager
+                .withRepository(this.reviewsRepository)
+                .save(review);
 
             // Insert photos
             await queryRunner.manager
@@ -72,7 +76,6 @@ export class EventsService {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
             console.error(err);
-            // TODO: rollback subscribed action
         } finally {
             // Defer
             await queryRunner.release();
@@ -83,17 +86,14 @@ export class EventsService {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
-        // TODO: Review not found
-        const review = await queryRunner.manager.findOne(Review, {
-            where: { id },
-            relations: ['author'],
-        });
+        const reviewsRepositoryCtx = queryRunner.manager.withRepository(this.reviewsRepository);
+        const photosRepositoryCtx = queryRunner.manager.withRepository(this.photosRepository);
+
+        const review = await reviewsRepositoryCtx.findOneWithRelated(id, ['author']);
         let rollbackPoint = review.content.length > 0 ? 1 : 0;
         let commitPoint = dto.content.length > 0 ? 1 : 0;
 
-        const photosRepositoryCtx = queryRunner.manager.withRepository(this.photosRepository);
         const existingPhotos = await photosRepositoryCtx.findByAttachedReview(review);
-
         rollbackPoint += existingPhotos.length > 0 ? 1 : 0;
         commitPoint += dto.attachedPhotoIds.length > 0 ? 1 : 0;
 
@@ -114,8 +114,7 @@ export class EventsService {
 
         try {
             // Update content
-            // TODO: subscribe to review content update
-            await queryRunner.manager.update(Review, { id }, { content: dto.content });
+            await reviewsRepositoryCtx.updateContent(id, dto.content);
 
             // Soft delete unattached photos
             await photosRepositoryCtx.softDeleteMany(toDelete);
@@ -138,7 +137,6 @@ export class EventsService {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
             console.error(err);
-            // TODO: rollback subscribed action
         } finally {
             // Defer
             await queryRunner.release();
@@ -149,10 +147,8 @@ export class EventsService {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
-        const review = await queryRunner.manager.findOne(Review, {
-            where: { id },
-            relations: [ 'author', 'photos' ],
-        });
+        const reviewsRepositoryCtx = queryRunner.manager.withRepository(this.reviewsRepository);
+        const review = await reviewsRepositoryCtx.findOneWithRelated(id, ['author', 'photos']);
 
         // Calc point
         const point = (await queryRunner.manager.findOne(PointLog, {
@@ -169,8 +165,7 @@ export class EventsService {
 
         try {
             // Soft delete review
-            // TODO: subscribe to delete review
-            await queryRunner.manager.softDelete(Review, { id });
+            await reviewsRepositoryCtx.softDelete({ id });
 
             // Manual cascade for soft deleting review
             await queryRunner.manager
@@ -198,7 +193,6 @@ export class EventsService {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
             console.error(err);
-            // TODO: rollback subscribed action
         } finally {
             // Defer
             await queryRunner.release();

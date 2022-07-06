@@ -1,7 +1,7 @@
 import { Repository } from 'typeorm';
 import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
 import { Photo } from './entities/photo.entity';
-import { Review } from 'src/events/entities';
+import { Review } from 'src/reviews/entities/review.entity';
 
 @CustomRepository(Photo)
 export class PhotosRepository extends Repository<Photo> {
