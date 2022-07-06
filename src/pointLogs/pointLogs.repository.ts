@@ -19,6 +19,6 @@ export class PointLogsRepository extends Repository<PointLog> {
         pointLog.action = action;
         pointLog.point = latestPoint + diff;
 
-        this.save(pointLog);
+        await this.save(pointLog);
     }
 }
