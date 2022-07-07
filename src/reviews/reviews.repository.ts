@@ -1,7 +1,8 @@
 import { Repository } from 'typeorm';
 import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
 import { Review } from './entities/review.entity';
-import { AddDuplicatedReviewError, UnhandledError } from 'src/common/errors';
+import { UnhandledError } from 'src/common/errors';
+import { AddDuplicatedReviewError } from './reviews.error';
 
 @CustomRepository(Review)
 export class ReviewsRepository extends Repository<Review> {
