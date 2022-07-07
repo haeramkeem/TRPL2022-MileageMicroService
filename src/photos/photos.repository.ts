@@ -2,19 +2,28 @@ import { Repository } from 'typeorm';
 import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
 import { Photo } from './entities/photo.entity';
 import { Review } from 'src/reviews/entities/review.entity';
+import { AddDuplicatedPhotoError } from './photos.error';
+import { UnhandledError } from 'src/common/errors';
 
 @CustomRepository(Photo)
 export class PhotosRepository extends Repository<Photo> {
-    async saveMany(ids: string[], attachedReview: Review) {
-        await this.save(ids.map(id => {
-            const photo = new Photo();
-            photo.id = id;
-            photo.attachedReview = attachedReview;
-            return photo;
-        }));
+    async safelySave(photo: Photo|Photo[]) {
+        return await this
+            .createQueryBuilder()
+            .insert()
+            .into(Photo)
+            .values(photo)
+            .execute()
+            .catch(err => {
+                if (err.code === 'ER_DUP_ENTRY') {
+                    throw new AddDuplicatedPhotoError();
+                } else {
+                    throw new UnhandledError(err);
+                }
+            });
     }
 
-    async findWithAttachedReview(attachedReview: Review): Promise<Photo[]> {
+    async findByAttachedReview(attachedReview: Partial<Review>): Promise<Photo[]> {
         return await this.findBy({ attachedReview });
     }
 
