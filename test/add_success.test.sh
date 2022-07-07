@@ -9,7 +9,6 @@ source <(curl -sL https://raw.githubusercontent.com/haeramkeem/sh-it/main/func/e
 
 # Gen user
 USER=$(uuidgen)
-
 cat << EOF | exec_sql
 INSERT INTO userData (id) VALUES ('$USER');
 EOF
