@@ -1,6 +1,6 @@
 import { Controller, Post, Body } from '@nestjs/common';
 import { EventsService } from './events.service';
-import { ActionType } from 'src/constants';
+import { ActionType } from 'src/common/constants';
 import * as dto from './dto';
 
 @Controller('events')
