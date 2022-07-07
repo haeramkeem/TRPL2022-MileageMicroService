@@ -19,14 +19,31 @@ cat << EOF | exec_sql
 INSERT INTO placeData (id) VALUES ('$PLACE');
 EOF
 
-# Request
-cat << EOF | curl_post localhost:60079/events
+# Gen review, photo id
+REVIEW=$(uuidgen)
+PHOTO=$(uuidgen)
+
+# Add
+cat << EOF | curl_post localhost:60079/events &> /dev/null
 {
     "type": "REVIEW",
     "action": "ADD",
-    "reviewId": "$(uuidgen)",
+    "reviewId": "$REVIEW",
     "content": "good!",
-    "attachedPhotoIds": ["$(uuidgen)"],
+    "attachedPhotoIds": ["$PHOTO"],
+    "userId": "$USER",
+    "placeId": "$PLACE"
+}
+EOF
+
+# Delete review
+cat << EOF | curl_post localhost:60079/events
+{
+    "type": "REVIEW",
+    "action": "DELETE",
+    "reviewId": "$REVIEW",
+    "content": "",
+    "attachedPhotoIds": [],
     "userId": "$USER",
     "placeId": "$PLACE"
 }

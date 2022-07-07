@@ -147,7 +147,10 @@ export class EventsService {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
+        // TODO: reviews repository factory
         const reviewsRepositoryCtx = queryRunner.manager.withRepository(this.reviewsRepository);
+
+        // Get requested review
         const review = await reviewsRepositoryCtx.safelyFindOneById({
             id: dto.reviewId,
             userId: dto.userId,
@@ -155,6 +158,7 @@ export class EventsService {
             relations: ['author', 'photos', 'place']
         });
 
+        // Calc rollback point
         let rollbackPoint = 0;
         rollbackPoint += review.content.length > 0 ? 1 : 0;
         rollbackPoint += review.photos.length > 0 ? 1 : 0;
@@ -164,14 +168,14 @@ export class EventsService {
 
         try {
             // Soft delete review
-            await reviewsRepositoryCtx.softDelete(review);
+            await reviewsRepositoryCtx.softDeleteMany([ review ]);
 
-            // Manual cascade for soft deleting review
+            // Manual ON_DELETE_CASCADE for soft deleting a review
             await queryRunner.manager
                 .withRepository(this.photosRepository)
                 .softCascade(review);
 
-            // Manual SET NULL for soft deleting review
+            // Manual ON_DELETE_SET_NULL for soft deleting a review
             const updateResult = await queryRunner.manager
                 .withRepository(this.placesRepository)
                 .deleteFirstReview(review.place.id, review);

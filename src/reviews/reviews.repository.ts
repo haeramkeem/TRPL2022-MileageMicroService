@@ -24,7 +24,11 @@ export class ReviewsRepository extends Repository<Review> {
 
     async safelyFindOneById(dto: FindOneDto): Promise<Review> {
         const review = await this.findOne({
-            where: { id: dto.id },
+            where: {
+                id: dto.id,
+                author: { id: dto.userId },
+                place: { id: dto.placeId },
+            },
             relations: dto.relations,
         });
         if (!review) throw new ReviewInvalidError();
@@ -33,5 +37,11 @@ export class ReviewsRepository extends Repository<Review> {
 
     async updateContent(id: string, content: string) {
         return await this.update({ id }, { content });
+    }
+
+    async softDeleteMany(reviews: Review[]) {
+        reviews.forEach(async(review) => {
+            await this.softDelete({ id: review.id });
+        });
     }
 }

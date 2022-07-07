@@ -1,4 +1,4 @@
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
 import { Photo } from './entities/photo.entity';
 import { Review } from 'src/reviews/entities/review.entity';
@@ -29,7 +29,7 @@ export class PhotosRepository extends Repository<Photo> {
 
     async softDeleteMany(photos: Photo[]) {
         photos.forEach(async (photo) => {
-            await this.softDelete(photo);
+            await this.softDelete({ id: photo.id });
         })
     }
 

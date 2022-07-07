@@ -19,7 +19,20 @@ cat << EOF | exec_sql
 INSERT INTO placeData (id) VALUES ('$PLACE');
 EOF
 
-# Request
+# Invalid user id
+cat << EOF | curl_post localhost:60079/events
+{
+    "type": "REVIEW",
+    "action": "ADD",
+    "reviewId": "$(uuidgen)",
+    "content": "good!",
+    "attachedPhotoIds": ["$(uuidgen)"],
+    "userId": "$(uuidgen)",
+    "placeId": "$PLACE"
+}
+EOF
+
+# Invalid place id
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
@@ -28,6 +41,6 @@ cat << EOF | curl_post localhost:60079/events
     "content": "good!",
     "attachedPhotoIds": ["$(uuidgen)"],
     "userId": "$USER",
-    "placeId": "$PLACE"
+    "placeId": "$(uuidgen)"
 }
 EOF

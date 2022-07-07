@@ -4,6 +4,7 @@ import { ActionType } from 'src/common/constants';
 import { Response } from 'express';
 import { BaseError, UnhandledError } from 'src/common/errors';
 import { ReqBodyDto, CreateDto, UpdateDto, RemoveDto } from './dto';
+import {StatusCodes} from 'http-status-codes';
 
 @Controller('events')
 export class EventsController {
@@ -16,13 +17,18 @@ export class EventsController {
         try {
             switch(body.action) {
                 case ActionType.ADD:
-                    await this.eventsService.create(body as CreateDto); break;
+                    await this.eventsService.create(body as CreateDto);
+                    res.status(StatusCodes.CREATED).send({ error: null });
+                    break;
                 case ActionType.MOD:
-                    await this.eventsService.update(body as UpdateDto); break;
+                    await this.eventsService.update(body as UpdateDto);
+                    res.status(StatusCodes.OK).send({ error: null });
+                    break;
                 case ActionType.DEL:
-                    await this.eventsService.remove(body as RemoveDto); break;
+                    await this.eventsService.remove(body as RemoveDto);
+                    res.status(StatusCodes.OK).send({ error: null });
+                    break;
             }
-            res.send({ error: null });
         } catch(err) {
             if (err instanceof BaseError) {
                 err.send(res);
