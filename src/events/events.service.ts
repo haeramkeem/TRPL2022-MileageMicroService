@@ -164,7 +164,7 @@ export class EventsService {
 
         try {
             // Soft delete review
-            await reviewsRepositoryCtx.softDelete(review);
+            await reviewsRepositoryCtx.softDeleteMany([ review ]);
 
             // Manual cascade for soft deleting review
             await queryRunner.manager

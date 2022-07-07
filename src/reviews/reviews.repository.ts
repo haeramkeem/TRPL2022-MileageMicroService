@@ -38,4 +38,10 @@ export class ReviewsRepository extends Repository<Review> {
     async updateContent(id: string, content: string) {
         return await this.update({ id }, { content });
     }
+
+    async softDeleteMany(reviews: Review[]) {
+        reviews.forEach(async(review) => {
+            await this.softDelete({ id: review.id });
+        });
+    }
 }
