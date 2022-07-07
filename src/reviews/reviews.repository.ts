@@ -1,12 +1,12 @@
 import { Repository } from 'typeorm';
 import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
 import { Review } from './entities/review.entity';
-import { UnhandledError } from 'src/common/errors';
-import { AddDuplicatedReviewError } from './reviews.error';
+import { AddDuplicatedReviewError, ReviewInvalidError } from './reviews.error';
+import { FindOneDto } from './dto/findOne.dto';
 
 @CustomRepository(Review)
 export class ReviewsRepository extends Repository<Review> {
-    async saveDistinct(review: Review|Review[]) {
+    async safelySave(review: Review|Review[]) {
         return await this
             .createQueryBuilder()
             .insert()
@@ -17,16 +17,18 @@ export class ReviewsRepository extends Repository<Review> {
                 if (err.code === 'ER_DUP_ENTRY') {
                     throw new AddDuplicatedReviewError();
                 } else {
-                    throw new UnhandledError(err);
+                    throw err; // Re-throw
                 }
             });
     }
 
-    async findOneWithRelated(id: string, relations: string[]): Promise<Review> {
-        return await this.findOne({
-            where: { id },
-            relations,
+    async safelyFindOneById(dto: FindOneDto): Promise<Review> {
+        const review = await this.findOne({
+            where: { id: dto.id },
+            relations: dto.relations,
         });
+        if (!review) throw new ReviewInvalidError();
+        return review;
     }
 
     async updateContent(id: string, content: string) {

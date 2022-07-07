@@ -1,18 +1,17 @@
 import { Module } from '@nestjs/common';
 import { EventsService } from './events.service';
 import { EventsController } from './events.controller';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { TypeOrmExModule } from 'src/typeorm-ex/typeorm-ex.module';
-import { User } from 'src/users';
 import { PlacesRepository } from 'src/places/places.repository';
 import { PhotosRepository } from 'src/photos/photos.repository';
 import { ReviewsRepository } from 'src/reviews/reviews.repository';
 import { PointLogsRepository } from 'src/pointLogs';
+import { UsersRepository } from 'src/users';
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([ User ]),
         TypeOrmExModule.forCustomRepository([
+            UsersRepository,
             PlacesRepository,
             PhotosRepository,
             ReviewsRepository,

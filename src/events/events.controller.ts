@@ -3,7 +3,7 @@ import { EventsService } from './events.service';
 import { ActionType } from 'src/common/constants';
 import { Response } from 'express';
 import { BaseError, UnhandledError } from 'src/common/errors';
-import * as dto from './dto';
+import { ReqBodyDto, CreateDto, UpdateDto, RemoveDto } from './dto';
 
 @Controller('events')
 export class EventsController {
@@ -12,15 +12,15 @@ export class EventsController {
     @Post()
     async post(
         @Res()  res:    Response,
-        @Body() body:   dto.PostEventDto) {
+        @Body() body:   ReqBodyDto) {
         try {
             switch(body.action) {
                 case ActionType.ADD:
-                    await this.eventsService.create(body as dto.CreateEventDto);
+                    await this.eventsService.create(body as CreateDto); break;
                 case ActionType.MOD:
-                    await this.eventsService.update(body.reviewId, body as dto.UpdateEventDto);
+                    await this.eventsService.update(body as UpdateDto); break;
                 case ActionType.DEL:
-                    await this.eventsService.remove(body.reviewId);
+                    await this.eventsService.remove(body as RemoveDto); break;
             }
             res.send({ error: null });
         } catch(err) {

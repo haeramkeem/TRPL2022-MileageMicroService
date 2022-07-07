@@ -12,7 +12,7 @@
 import { IsEnum, IsIn, IsString, IsUUID } from "class-validator"
 import { ActionType } from "src/common/constants";
 
-export class PostEventDto {
+export class ReqBodyDto {
     @IsString()
     @IsIn([ 'REVIEW' ])
     type: 'REVIEW';
