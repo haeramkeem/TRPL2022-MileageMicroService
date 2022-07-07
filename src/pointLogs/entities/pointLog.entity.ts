@@ -1,5 +1,5 @@
 import { User } from 'src/users';
-import { ActionType } from 'src/constants';
+import { ActionType } from 'src/common/constants';
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('pointLogData')

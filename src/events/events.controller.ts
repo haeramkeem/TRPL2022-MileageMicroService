@@ -1,6 +1,8 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import { Controller, Post, Body, Res } from '@nestjs/common';
 import { EventsService } from './events.service';
-import { ActionType } from 'src/constants';
+import { ActionType } from 'src/common/constants';
+import { Response } from 'express';
+import { BaseError, UnhandledError } from 'src/common/errors';
 import * as dto from './dto';
 
 @Controller('events')
@@ -8,18 +10,25 @@ export class EventsController {
     constructor(private readonly eventsService: EventsService) {}
 
     @Post()
-    async post(@Body() body: dto.PostEventDto) {
+    async post(
+        @Res()  res:    Response,
+        @Body() body:   dto.PostEventDto) {
         try {
             switch(body.action) {
                 case ActionType.ADD:
-                    return await this.eventsService.create(body as dto.CreateEventDto);
+                    await this.eventsService.create(body as dto.CreateEventDto);
                 case ActionType.MOD:
-                    return await this.eventsService.update(body.reviewId, body as dto.UpdateEventDto);
+                    await this.eventsService.update(body.reviewId, body as dto.UpdateEventDto);
                 case ActionType.DEL:
-                    return await this.eventsService.remove(body.reviewId);
+                    await this.eventsService.remove(body.reviewId);
             }
+            res.send({ error: null });
         } catch(err) {
-            // TODO: General error handling
+            if (err instanceof BaseError) {
+                err.send(res);
+            } else {
+                new UnhandledError(err).send(res);
+            }
         }
     }
 }
