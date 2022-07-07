@@ -1,19 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { CreateEventDto, UpdateEventDto } from './dto';
-import { DataSource, Repository } from 'typeorm';
+import { CreateDto, UpdateDto, RemoveDto } from './dto';
+import { DataSource } from 'typeorm';
 import { ActionType } from 'src/common/constants';
 import { PlacesRepository } from 'src/places';
-import { PhotosRepository } from 'src/photos';
+import { Photo, PhotosRepository } from 'src/photos';
 import { ReviewsRepository, Review } from 'src/reviews';
 import { PointLogsRepository } from 'src/pointLogs';
-import { User } from 'src/users';
-import { InjectRepository } from '@nestjs/typeorm';
+import { UsersRepository } from 'src/users';
 
 @Injectable()
 export class EventsService {
     constructor(
-        @InjectRepository(User)
-        private readonly usersRepository: Repository<User>,
+        private readonly usersRepository: UsersRepository,
         private readonly placesRepository: PlacesRepository,
         private readonly photosRepository: PhotosRepository,
         private readonly reviewsRepository: ReviewsRepository,
@@ -21,15 +19,15 @@ export class EventsService {
         private dataSource: DataSource,
     ) {}
 
-    async create(dto: CreateEventDto) {
+    async create(dto: CreateDto) {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
         const review = new Review();
         review.id = dto.reviewId;
         review.content = dto.content;
-        review.author = await this.usersRepository.findOneBy({ id: dto.userId });
-        review.place = await this.placesRepository.findOneBy({ id: dto.placeId });
+        review.author = await this.usersRepository.safelyFindOneById(dto.userId);
+        review.place = await this.placesRepository.safelyFindOneById(dto.placeId);
 
         // Calc point
         let commitPoint = 0;
@@ -43,17 +41,22 @@ export class EventsService {
             // Insert review
             await queryRunner.manager
                 .withRepository(this.reviewsRepository)
-                .saveDistinct(review);
+                .safelySave(review);
 
             // Insert photos
             await queryRunner.manager
                 .withRepository(this.photosRepository)
-                .saveMany(dto.attachedPhotoIds, review);
+                .safelySave(dto.attachedPhotoIds.map(photoId => {
+                    const photo = new Photo();
+                    photo.id = photoId;
+                    photo.attachedReview = review;
+                    return photo;
+                }));
 
             // Update place
             const updateResult = await queryRunner.manager
                 .withRepository(this.placesRepository)
-                .updateFirstReview(dto.placeId, dto.reviewId);
+                .updateFirstReview(dto.placeId, review);
             commitPoint += updateResult.affected > 0 ? 1 : 0;
 
             // Insert point log
@@ -66,7 +69,7 @@ export class EventsService {
         } catch (err) {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
-            // Re-thorw error to be able to catch in controller layer
+            // Re-throw error to be able to catch in controller layer
             throw err;
         } finally {
             // Defer
@@ -74,7 +77,7 @@ export class EventsService {
         }
     }
 
-    async update(id: string, dto: UpdateEventDto) {
+    async update(dto: UpdateDto) {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
@@ -84,7 +87,12 @@ export class EventsService {
         const photosRepositoryCtx = queryRunner.manager.withRepository(this.photosRepository);
 
         // Load review
-        const review = await reviewsRepositoryCtx.findOneWithRelated(id, ['author', 'photos']);
+        const review = await reviewsRepositoryCtx.safelyFindOneById({
+            id: dto.reviewId,
+            userId: dto.userId,
+            placeId: dto.placeId,
+            relations: ['author', 'photos'],
+        });
 
         // Calc rollback & commit point
         let rollbackPoint = review.content.length > 0 ? 1 : 0;
@@ -104,13 +112,18 @@ export class EventsService {
 
         try {
             // Update content
-            await reviewsRepositoryCtx.updateContent(id, dto.content);
+            await reviewsRepositoryCtx.updateContent(dto.reviewId, dto.content);
 
             // Soft delete unattached photos
             await photosRepositoryCtx.softDeleteMany(toDelete);
 
             // Insert photos
-            await photosRepositoryCtx.saveMany(toInsert, review);
+            await photosRepositoryCtx.safelySave(toInsert.map(photoId => {
+                const photo = new Photo();
+                photo.id = photoId;
+                photo.attachedReview = review;
+                return photo;
+            }));
 
             // Insert point log
             await queryRunner.manager
@@ -122,19 +135,25 @@ export class EventsService {
         } catch (err) {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
-            console.error(err);
+            // Re-throw error to be able to catch in controller layer
+            throw err;
         } finally {
             // Defer
             await queryRunner.release();
         }
     }
 
-    async remove(id: string) {
+    async remove(dto: RemoveDto) {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
         const reviewsRepositoryCtx = queryRunner.manager.withRepository(this.reviewsRepository);
-        const review = await reviewsRepositoryCtx.findOneWithRelated(id, ['author', 'photos']);
+        const review = await reviewsRepositoryCtx.safelyFindOneById({
+            id: dto.reviewId,
+            userId: dto.userId,
+            placeId: dto.placeId,
+            relations: ['author', 'photos', 'place']
+        });
 
         let rollbackPoint = 0;
         rollbackPoint += review.content.length > 0 ? 1 : 0;
@@ -145,17 +164,17 @@ export class EventsService {
 
         try {
             // Soft delete review
-            await reviewsRepositoryCtx.softDelete({ id });
+            await reviewsRepositoryCtx.softDelete(review);
 
             // Manual cascade for soft deleting review
             await queryRunner.manager
                 .withRepository(this.photosRepository)
-                .softCascadeMany(review);
+                .softCascade(review);
 
             // Manual SET NULL for soft deleting review
             const updateResult = await queryRunner.manager
                 .withRepository(this.placesRepository)
-                .softDeleteOne(id);
+                .deleteFirstReview(review.place.id, review);
             rollbackPoint += updateResult.affected > 0 ? 1 : 0;
 
             // Insert point log
@@ -168,7 +187,8 @@ export class EventsService {
         } catch (err) {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
-            console.error(err);
+            // Re-throw error to be able to catch in controller layer
+            throw err;
         } finally {
             // Defer
             await queryRunner.release();
