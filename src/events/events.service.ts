@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateEventDto, UpdateEventDto } from './dto';
 import { DataSource, Repository } from 'typeorm';
-import { ActionType } from 'src/constants';
+import { ActionType } from 'src/common/constants';
 import { PlacesRepository } from 'src/places';
 import { PhotosRepository } from 'src/photos';
 import { ReviewsRepository, Review } from 'src/reviews';
@@ -43,7 +43,7 @@ export class EventsService {
             // Insert review
             await queryRunner.manager
                 .withRepository(this.reviewsRepository)
-                .save(review);
+                .saveDistinct(review);
 
             // Insert photos
             await queryRunner.manager
@@ -66,7 +66,8 @@ export class EventsService {
         } catch (err) {
             // Rollback for DB fault
             await queryRunner.rollbackTransaction();
-            console.error(err);
+            // Re-thorw error to be able to catch in controller layer
+            throw err;
         } finally {
             // Defer
             await queryRunner.release();

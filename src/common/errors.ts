@@ -21,6 +21,9 @@ export class BaseError extends Error {
     }
 }
 
+// -------------------------
+// 400~
+// -------------------------
 export class BadRequest extends BaseError {
     constructor(errMsg: string) {
         super(StatusCodes.BAD_REQUEST, errMsg);
@@ -30,5 +33,15 @@ export class BadRequest extends BaseError {
 export class AddDuplicatedReviewError extends BadRequest {
     constructor() {
         super("Review already exists");
+    }
+}
+
+// -------------------------
+// 500~
+// -------------------------
+export class UnhandledError extends BaseError {
+    constructor(err: Error) {
+        console.error(err.stack);
+        super(StatusCodes.INTERNAL_SERVER_ERROR, err.message);
     }
 }
