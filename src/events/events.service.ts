@@ -78,22 +78,26 @@ export class EventsService {
         const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
         await queryRunner.connect();
 
+        // TODO: reviewsRepository factory
         const reviewsRepositoryCtx = queryRunner.manager.withRepository(this.reviewsRepository);
+        // TODO: photosRepository factory
         const photosRepositoryCtx = queryRunner.manager.withRepository(this.photosRepository);
 
-        const review = await reviewsRepositoryCtx.findOneWithRelated(id, ['author']);
+        // Load review
+        const review = await reviewsRepositoryCtx.findOneWithRelated(id, ['author', 'photos']);
+
+        // Calc rollback & commit point
         let rollbackPoint = review.content.length > 0 ? 1 : 0;
         let commitPoint = dto.content.length > 0 ? 1 : 0;
-
-        const existingPhotos = await photosRepositoryCtx.findWithAttachedReview(review);
-        rollbackPoint += existingPhotos.length > 0 ? 1 : 0;
+        rollbackPoint += review.photos.length > 0 ? 1 : 0;
         commitPoint += dto.attachedPhotoIds.length > 0 ? 1 : 0;
 
+        // Get toDelete, toInsert photos list
         const newPhotosSet = new Set(dto.attachedPhotoIds);
-        const existingPhotosSet = new Set(existingPhotos.map(photo => photo.id));
+        const oldPhotosSet = new Set(review.photos.map(photo => photo.id));
 
-        const toDelete = existingPhotos.filter(photo => !newPhotosSet.has(photo.id));
-        const toInsert = dto.attachedPhotoIds.filter(photo => !existingPhotosSet.has(photo));
+        const toDelete = review.photos.filter(photo => !newPhotosSet.has(photo.id));
+        const toInsert = dto.attachedPhotoIds.filter(photoId => !oldPhotosSet.has(photoId));
 
         // Start transaction
         await queryRunner.startTransaction();
