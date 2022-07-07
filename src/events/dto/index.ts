@@ -1,7 +1,8 @@
-// Barell file for DTOs
+// Re-export
 
-import { PostEventDto } from './post-event.dto';
-import { CreateEventDto } from './create-event.dto';
-import { UpdateEventDto } from './update-event.dto';
+import { ReqBodyDto } from './reqBody.dto';
+import { CreateDto } from './create.dto';
+import { UpdateDto } from './update.dto';
+import { RemoveDto } from './remove.dto';
 
-export { PostEventDto, CreateEventDto, UpdateEventDto };
+export { ReqBodyDto, CreateDto, UpdateDto, RemoveDto };

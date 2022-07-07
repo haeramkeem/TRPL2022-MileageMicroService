@@ -33,7 +33,7 @@ export class PhotosRepository extends Repository<Photo> {
         })
     }
 
-    async softCascadeMany(attachedReview: Review) {
+    async softCascade(attachedReview: Review) {
         await this.softDelete({ attachedReview });
     }
 }
