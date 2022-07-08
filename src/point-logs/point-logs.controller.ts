@@ -15,8 +15,11 @@ export class PointLogsController {
             .getLastPoint(reqQuery.owner)
             .then(point => res.status(http.OK).send({ error: null, point }))
             .catch(err => {
-                if (err instanceof BaseError) err.send(res);
-                new UnhandledError(err).send(res)
+                if (err instanceof BaseError) {
+                    err.send(res);
+                } else {
+                    new UnhandledError(err).send(res)
+                }
             });
     }
 }
