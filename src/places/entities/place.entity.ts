@@ -6,7 +6,10 @@ export class Place {
     @PrimaryColumn('uuid')
     id: string;
 
-    @OneToOne(() => Review, { onDelete: "SET NULL" })
+    @OneToOne(() => Review, {
+        onUpdate: 'CASCADE',
+        onDelete: 'SET NULL',
+    })
     @JoinColumn()
     firstReview: Review;
 

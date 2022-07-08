@@ -9,7 +9,6 @@ export class Photo {
     @ManyToOne(() => Review, review => review.photos, {
         onDelete: 'CASCADE',
         onUpdate: 'CASCADE',
-        cascade: true,
         nullable: false,
     })
     attachedReview: Review;
