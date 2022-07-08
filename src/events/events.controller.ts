@@ -1,33 +1,39 @@
 import { Controller, Post, Body, Res } from '@nestjs/common';
-import { EventsService } from './events.service';
-import { ActionType } from 'src/common/constants';
+import { ReviewEventsService } from './review-events.service';
+import { EventsType, EventsActionType } from './events.constant';
 import { Response } from 'express';
 import { BaseError, UnhandledError } from 'src/common/errors';
 import { ReqBodyDto, CreateDto, UpdateDto, RemoveDto } from './dto';
-import {StatusCodes} from 'http-status-codes';
+import { StatusCodes } from 'http-status-codes';
 
 @Controller('events')
 export class EventsController {
-    constructor(private readonly eventsService: EventsService) {}
+    constructor(private readonly reviewEventsService: ReviewEventsService) {}
 
     @Post()
     async post(
         @Res()  res:    Response,
         @Body() body:   ReqBodyDto) {
         try {
-            switch(body.action) {
-                case ActionType.ADD:
-                    await this.eventsService.create(body as CreateDto);
+            switch(body.type) {
+                case EventsType.REVIEW:
+                switch(body.action) {
+                    case EventsActionType.ADD:
+                    await this.reviewEventsService.create(body as CreateDto);
                     res.status(StatusCodes.CREATED).send({ error: null });
                     break;
-                case ActionType.MOD:
-                    await this.eventsService.update(body as UpdateDto);
+
+                    case EventsActionType.MOD:
+                    await this.reviewEventsService.update(body as UpdateDto);
                     res.status(StatusCodes.OK).send({ error: null });
                     break;
-                case ActionType.DEL:
-                    await this.eventsService.remove(body as RemoveDto);
+
+                    case EventsActionType.DEL:
+                    await this.reviewEventsService.remove(body as RemoveDto);
                     res.status(StatusCodes.OK).send({ error: null });
                     break;
+                }
+                break;
             }
         } catch(err) {
             if (err instanceof BaseError) {

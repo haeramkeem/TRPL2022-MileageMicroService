@@ -6,7 +6,7 @@ import { UserInvalidError } from './users.error';
 @CustomRepository(User)
 export class UsersRepository extends Repository<User> {
     async safelyFindOneById(id: string): Promise<User> {
-        const user = await this.findOneBy({ id })
+        const user = await this.findOneBy({ id });
         if (!user) throw new UserInvalidError();
         return user;
     }

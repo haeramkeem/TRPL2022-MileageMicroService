@@ -2,12 +2,12 @@ import { Repository } from 'typeorm';
 import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
 import { PointLog } from './entities/point-log.entity';
 import { User } from 'src/users';
-import { ActionType } from 'src/common/constants';
+import { EventsActionType } from 'src/events/events.constant';
 import { PointNotFoundError } from './point-logs.error';
 
 @CustomRepository(PointLog)
 export class PointLogsRepository extends Repository<PointLog> {
-    async saveOne(owner: User, action: ActionType, diff: number) {
+    async saveOne(owner: User, action: EventsActionType, diff: number) {
         if (diff === 0) return;
 
         const pointLog = new PointLog();

@@ -1,5 +1,5 @@
 import { User } from 'src/users';
-import { ActionType } from 'src/common/constants';
+import { EventsActionType } from 'src/events/events.constant';
 import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('pointLogData')
@@ -17,8 +17,8 @@ export class PointLog {
     @CreateDateColumn()
     timestamp: Date;
 
-    @Column({ type: 'enum', enum: ActionType })
-    action: ActionType;
+    @Column({ type: 'enum', enum: EventsActionType })
+    action: EventsActionType;
 
     @Column({ nullable: false })
     point: number;

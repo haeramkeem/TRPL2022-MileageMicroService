@@ -1,4 +1,4 @@
-import { IsNull, Repository } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
 import { Photo } from './entities/photo.entity';
 import { Review } from 'src/reviews/entities/review.entity';
@@ -21,10 +21,6 @@ export class PhotosRepository extends Repository<Photo> {
                     throw new UnhandledError(err);
                 }
             });
-    }
-
-    async findByAttachedReview(attachedReview: Partial<Review>): Promise<Photo[]> {
-        return await this.findBy({ attachedReview });
     }
 
     async softDeleteMany(photos: Photo[]) {
