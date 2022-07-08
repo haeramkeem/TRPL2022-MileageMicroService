@@ -19,7 +19,11 @@ cat << EOF | exec_sql
 INSERT INTO placeData (id) VALUES ('$PLACE');
 EOF
 
-# Request
+# Add
+echo ""
+echo "*** TC1: Add a review"
+echo "*** Should response '201 Created'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",

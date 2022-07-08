@@ -20,6 +20,10 @@ INSERT INTO placeData (id) VALUES ('$PLACE');
 EOF
 
 # Invalid user id
+echo ""
+echo "*** TC1: User ID not found"
+echo "*** Should response '400 Bad Request'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
@@ -33,6 +37,10 @@ cat << EOF | curl_post localhost:60079/events
 EOF
 
 # Invalid place id
+echo ""
+echo "*** TC2: Place ID not found"
+echo "*** Should response '400 Bad Request'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",

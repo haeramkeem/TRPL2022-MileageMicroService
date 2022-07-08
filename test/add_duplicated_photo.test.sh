@@ -39,6 +39,10 @@ cat << EOF | curl_post localhost:60079/events &> /dev/null
 EOF
 
 # Gen duplicated photo
+echo ""
+echo "*** TC1: Add review that contains duplicated photo (Every photo should have an unique UUID)"
+echo "*** Should response '400 Bad Request'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
