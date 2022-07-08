@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventsModule } from './events/events.module';
+import { PointLogsModule } from './point-logs/point-logs.module';
 
 @Module({
     imports: [
@@ -15,6 +16,7 @@ import { EventsModule } from './events/events.module';
             synchronize:    (process.env.NODE_ENV == "development"),
         }),
         EventsModule,
+        PointLogsModule,
     ],
 })
 export class AppModule {}
