@@ -10,7 +10,7 @@ services:
     depends_on:
       - mariadb
     environment:
-      - "NODE_ENV=development"
+      - "NODE_ENV=production"
       - "DB_HOST=mariadb"
       - "DB_PORT=3306"
       - "DB_USERNAME=${DB_USERNAME}"
@@ -21,6 +21,7 @@ services:
     image: mariadb:10.8.2-rc-focal
     volumes:
       - mrdata:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d:ro
     environment:
       - "MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}"
       - "MARIADB_USER=${DB_USERNAME}"
@@ -30,7 +31,7 @@ services:
       - ${DB_PORT}:3306
   phpmyadmin:
     container_name: phpmyadmin
-    image: phpmyadmin:5.1.3
+    image: phpmyadmin:5.1.1
     links:
       - "mariadb:db"
     ports:
