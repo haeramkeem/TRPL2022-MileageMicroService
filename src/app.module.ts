@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventsModule } from './events/events.module';
 import { PointLogsModule } from './point-logs/point-logs.module';
+import { CustomNamingStrategy } from './common/naming-strategy';
 
 @Module({
     imports: [
@@ -14,6 +15,8 @@ import { PointLogsModule } from './point-logs/point-logs.module';
             database:       process.env.DB_DATABASE,
             entities:       [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize:    (process.env.NODE_ENV == "development"),
+            logging:        (process.env.NODE_ENV == "development"),
+            namingStrategy: new CustomNamingStrategy(),
         }),
         EventsModule,
         PointLogsModule,

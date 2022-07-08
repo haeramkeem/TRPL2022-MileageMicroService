@@ -7,7 +7,11 @@ export class PointLog {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => User, user => user.pointLogs, { onDelete: "CASCADE" })
+    @ManyToOne(() => User, user => user.pointLogs, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+        nullable: false,
+    })
     owner: User;
 
     @CreateDateColumn()
@@ -16,6 +20,6 @@ export class PointLog {
     @Column({ type: 'enum', enum: ActionType })
     action: ActionType;
 
-    @Column()
+    @Column({ nullable: false })
     point: number;
 }
