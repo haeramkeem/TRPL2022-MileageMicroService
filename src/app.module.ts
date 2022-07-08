@@ -15,6 +15,7 @@ import { CustomNamingStrategy } from './common/naming-strategy';
             database:       process.env.DB_DATABASE,
             entities:       [__dirname + '/**/*.entity{.ts,.js}'],
             synchronize:    (process.env.NODE_ENV == "development"),
+            logging:        (process.env.NODE_ENV == "development"),
             namingStrategy: new CustomNamingStrategy(),
         }),
         EventsModule,
