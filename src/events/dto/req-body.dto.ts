@@ -9,7 +9,7 @@
 //     "placeId": "2e4baf1c-5acb-4efb-a1af-eddada31b00f"
 // }
 
-import { IsEnum, IsIn, IsString, IsUUID } from 'class-validator';
+import { IsEnum, IsString, IsUUID } from 'class-validator';
 import { EventsType, EventsActionType } from '../events.constant';
 
 export class ReqBodyDto {
