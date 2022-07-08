@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { CreateDto, UpdateDto, RemoveDto } from './dto';
-import { DataSource } from 'typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 import { EventsActionType } from './events.constant';
 import { PlacesRepository } from 'src/places';
 import { Photo, PhotosRepository } from 'src/photos';
@@ -11,18 +11,23 @@ import { UsersRepository } from 'src/users';
 @Injectable()
 export class ReviewEventsService {
     constructor(
-        private readonly usersRepository: UsersRepository,
-        private readonly placesRepository: PlacesRepository,
-        private readonly photosRepository: PhotosRepository,
-        private readonly reviewsRepository: ReviewsRepository,
-        private readonly pointLogRepository: PointLogsRepository,
+        private readonly usersRepository:       UsersRepository,
+        private readonly placesRepository:      PlacesRepository,
+        private readonly photosRepository:      PhotosRepository,
+        private readonly reviewsRepository:     ReviewsRepository,
+        private readonly pointLogRepository:    PointLogsRepository,
         private dataSource: DataSource,
     ) {}
 
-    async create(dto: CreateDto) {
-        const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
+    private async startTransaction(): Promise<QueryRunner> {
+        const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
+        await queryRunner.startTransaction();
+        return queryRunner;
+    }
 
+    async create(dto: CreateDto) {
+        // Gen review obj
         const review = new Review();
         review.id = dto.reviewId;
         review.content = dto.content;
@@ -35,8 +40,7 @@ export class ReviewEventsService {
         commitPoint += dto.attachedPhotoIds.length > 0 ? 1 : 0;
 
         // Start transaction
-        await queryRunner.startTransaction();
-
+        const queryRunner = await this.startTransaction();
         try {
             // Insert review
             await queryRunner.manager
@@ -78,16 +82,8 @@ export class ReviewEventsService {
     }
 
     async update(dto: UpdateDto) {
-        const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
-        await queryRunner.connect();
-
-        // TODO: reviewsRepository factory
-        const reviewsRepositoryCtx = queryRunner.manager.withRepository(this.reviewsRepository);
-        // TODO: photosRepository factory
-        const photosRepositoryCtx = queryRunner.manager.withRepository(this.photosRepository);
-
         // Load review
-        const review = await reviewsRepositoryCtx.safelyFindOneById({
+        const review = await this.reviewsRepository.safelyFindOneById({
             id: dto.reviewId,
             userId: dto.userId,
             placeId: dto.placeId,
@@ -108,22 +104,27 @@ export class ReviewEventsService {
         const toInsert = dto.attachedPhotoIds.filter(photoId => !oldPhotosSet.has(photoId));
 
         // Start transaction
-        await queryRunner.startTransaction();
-
+        const queryRunner = await this.startTransaction();
         try {
             // Update content
-            await reviewsRepositoryCtx.updateContent(dto.reviewId, dto.content);
+            await queryRunner.manager
+                .withRepository(this.reviewsRepository)
+                .updateContent(dto.reviewId, dto.content);
 
             // Soft delete unattached photos
-            await photosRepositoryCtx.softDeleteMany(toDelete);
+            await queryRunner.manager
+                .withRepository(this.photosRepository)
+                .softDeleteMany(toDelete);
 
             // Insert photos
-            await photosRepositoryCtx.safelySave(toInsert.map(photoId => {
-                const photo = new Photo();
-                photo.id = photoId;
-                photo.attachedReview = review;
-                return photo;
-            }));
+            await queryRunner.manager
+                .withRepository(this.photosRepository)
+                .safelySave(toInsert.map(photoId => {
+                    const photo = new Photo();
+                    photo.id = photoId;
+                    photo.attachedReview = review;
+                    return photo;
+                }));
 
             // Insert point log
             await queryRunner.manager
@@ -144,14 +145,8 @@ export class ReviewEventsService {
     }
 
     async remove(dto: RemoveDto) {
-        const queryRunner = this.dataSource.createQueryRunner(); // TODO: QueryRunnerFactory
-        await queryRunner.connect();
-
-        // TODO: reviews repository factory
-        const reviewsRepositoryCtx = queryRunner.manager.withRepository(this.reviewsRepository);
-
         // Get requested review
-        const review = await reviewsRepositoryCtx.safelyFindOneById({
+        const review = await this.reviewsRepository.safelyFindOneById({
             id: dto.reviewId,
             userId: dto.userId,
             placeId: dto.placeId,
@@ -164,11 +159,12 @@ export class ReviewEventsService {
         rollbackPoint += review.photos.length > 0 ? 1 : 0;
 
         // Start transaction
-        await queryRunner.startTransaction();
-
+        const queryRunner = await this.startTransaction();
         try {
             // Soft delete review
-            await reviewsRepositoryCtx.softDeleteMany([ review ]);
+            await queryRunner.manager
+                .withRepository(this.reviewsRepository)
+                .softDeleteMany([ review ]);
 
             // Manual ON_DELETE_CASCADE for soft deleting a review
             await queryRunner.manager
