@@ -29,6 +29,9 @@ REVIEW=$(uuidgen)
 PHOTO=$(uuidgen)
 
 # User 1 adds review
+echo ""
+echo "*** User 1 adds a review"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
@@ -42,6 +45,9 @@ cat << EOF | curl_post localhost:60079/events
 EOF
 
 # User 1 deletes review
+echo ""
+echo "*** User 1 deletes a review"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
@@ -55,6 +61,9 @@ cat << EOF | curl_post localhost:60079/events
 EOF
 
 # User 2 adds review
+echo ""
+echo "*** User 2 adds a review"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",

@@ -23,7 +23,7 @@ EOF
 REVIEW=$(uuidgen)
 PHOTO=$(uuidgen)
 
-# Add
+# Add a test review
 cat << EOF | curl_post localhost:60079/events &> /dev/null
 {
     "type": "REVIEW",
@@ -37,6 +37,10 @@ cat << EOF | curl_post localhost:60079/events &> /dev/null
 EOF
 
 # Delete review
+echo ""
+echo "*** TC1: Delete a review"
+echo "*** Should response '200 OK'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",

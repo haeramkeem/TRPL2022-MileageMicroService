@@ -1,0 +1,39 @@
+version: '3.9'
+
+services:
+  mileage:
+    container_name: mileage
+    build: .
+    ports:
+      - 60079:60079
+    restart: always
+    depends_on:
+      - mariadb
+    environment:
+      - "NODE_ENV=development"
+      - "DB_HOST=mariadb"
+      - "DB_PORT=3306"
+      - "DB_USERNAME=${DB_USERNAME}"
+      - "DB_PASSWORD=${DB_PASSWORD}"
+      - "DB_DATABASE=${DB_DATABASE}"
+  mariadb:
+    container_name: mariadb
+    image: mariadb:10.8.2-rc-focal
+    volumes:
+      - mrdata:/var/lib/mysql
+    environment:
+      - "MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}"
+      - "MARIADB_USER=${DB_USERNAME}"
+      - "MARIADB_PASSWORD=${DB_PASSWORD}"
+      - "MARIADB_DATABASE=${DB_DATABASE}"
+    ports:
+      - ${DB_PORT}:3306
+  phpmyadmin:
+    container_name: phpmyadmin
+    image: phpmyadmin:5.1.3
+    links:
+      - "mariadb:db"
+    ports:
+      - 60080:80
+volumes:
+  mrdata:

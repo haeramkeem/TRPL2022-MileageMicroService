@@ -37,6 +37,10 @@ cat << EOF | curl_post localhost:60079/events &> /dev/null
 EOF
 
 # Modify content
+echo ""
+echo "*** TC1: Modify review content"
+echo "*** Should response '200 OK'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
@@ -50,6 +54,10 @@ cat << EOF | curl_post localhost:60079/events
 EOF
 
 # Delete photos
+echo ""
+echo "*** TC2: Delete photo"
+echo "*** Should response '200 OK'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
@@ -63,6 +71,10 @@ cat << EOF | curl_post localhost:60079/events
 EOF
 
 # Add photos
+echo ""
+echo "*** TC3: Add new photo"
+echo "*** Should response '200 OK'"
+echo ""
 PHOTO2=$(uuidgen)
 cat << EOF | curl_post localhost:60079/events
 {
@@ -77,6 +89,10 @@ cat << EOF | curl_post localhost:60079/events
 EOF
 
 # Add another photos
+echo ""
+echo "*** TC4: Add another photo"
+echo "*** Should response '200 OK'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",

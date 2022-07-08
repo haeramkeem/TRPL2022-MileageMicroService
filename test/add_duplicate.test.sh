@@ -41,6 +41,10 @@ cat << EOF | curl_post localhost:60079/events &> /dev/null
 EOF
 
 # Gen duplicated review
+echo ""
+echo "*** TC1: Add duplicated review"
+echo "*** Should response '400 Bad Request'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",

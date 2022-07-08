@@ -20,6 +20,10 @@ INSERT INTO placeData (id) VALUES ('$PLACE');
 EOF
 
 # Non-UUID review id
+echo ""
+echo "*** TC1: Non-UUID Review ID"
+echo "*** Should response '400 Bad Request'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
@@ -33,6 +37,10 @@ cat << EOF | curl_post localhost:60079/events
 EOF
 
 # Non-UUID photo id
+echo ""
+echo "*** TC2: Non-UUID Photo ID"
+echo "*** Should response '400 Bad Request'"
+echo ""
 cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
