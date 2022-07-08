@@ -8,6 +8,9 @@ export class PointLogsService {
     ) {}
 
     async getLastPoint(id: string): Promise<number> {
-        return this.pointLogsRepository.safelyFindPointByOwnerId(id);
+        return (await this
+            .pointLogsRepository
+            .safelyFindOneByOwnerId(id))
+            .point;
     }
 }

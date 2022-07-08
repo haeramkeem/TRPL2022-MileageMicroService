@@ -3,6 +3,7 @@ import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
 import { PointLog } from './entities/point-log.entity';
 import { User } from 'src/users';
 import { ActionType } from 'src/common/constants';
+import { PointNotFoundError } from './point-logs.error';
 
 @CustomRepository(PointLog)
 export class PointLogsRepository extends Repository<PointLog> {
@@ -12,19 +13,25 @@ export class PointLogsRepository extends Repository<PointLog> {
         const pointLog = new PointLog();
         pointLog.owner = owner;
         pointLog.action = action;
-        pointLog.point = (await this.safelyFindPointByOwnerId(owner.id)) + diff;
+        pointLog.point = await this
+            .safelyFindOneByOwnerId(owner.id)
+            .then(pointLog => (pointLog.point + diff))
+            .catch(err => {
+                if (err instanceof PointNotFoundError) return diff;
+                throw err; // Re-throw
+            });
 
         await this.save(pointLog);
     }
 
-    async safelyFindPointByOwnerId(ownerId: string): Promise<number> {
+    async safelyFindOneByOwnerId(ownerId: string): Promise<PointLog> {
         const latest = await this.findOne({
             where: { owner: { id: ownerId } },
             order: { id: 'DESC' },
         });
 
-        if (!latest) return 0;
+        if (!latest) throw new PointNotFoundError();
 
-        return latest.point;
+        return latest;
     }
 }
