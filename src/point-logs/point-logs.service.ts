@@ -1,4 +1,13 @@
 import { Injectable } from '@nestjs/common';
+import { PointLogsRepository } from './point-logs.repository';
 
 @Injectable()
-export class PointLogsService {}
+export class PointLogsService {
+    constructor(
+        private readonly pointLogsRepository: PointLogsRepository,
+    ) {}
+
+    async getLastPoint(id: string): Promise<number> {
+        return this.pointLogsRepository.safelyFindPointByOwnerId(id);
+    }
+}
