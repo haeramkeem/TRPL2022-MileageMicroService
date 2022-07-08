@@ -9,16 +9,22 @@ export class PointLogsRepository extends Repository<PointLog> {
     async saveOne(owner: User, action: ActionType, diff: number) {
         if (diff === 0) return;
 
-        const latestPoint = await this.findOne({
-            where: { owner },
-            order: { id: 'DESC' },
-        });
-
         const pointLog = new PointLog();
         pointLog.owner = owner;
         pointLog.action = action;
-        pointLog.point = !!latestPoint ? latestPoint.point + diff : diff;
+        pointLog.point = await this.safelyFindPointByOwnerId(owner.id);
 
         await this.save(pointLog);
+    }
+
+    async safelyFindPointByOwnerId(ownerId: string): Promise<number> {
+        const latest = await this.findOne({
+            where: { owner: { id: ownerId } },
+            order: { id: 'DESC' },
+        });
+
+        if (!latest) return 0;
+
+        return latest.point;
     }
 }
