@@ -1,6 +1,6 @@
 import { IsUUID } from 'class-validator';
 
-export class ReqParamDto {
+export class ReqQueryDto {
     @IsUUID()
-    id: string;
+    owner: string;
 }

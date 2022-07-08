@@ -35,5 +35,5 @@ EOF
 # Request -> must return error (w/ 400)
 curl -v \
     --max-time 10 \
-    localhost:60079/point/no-uuid
+    localhost:60079/point?owner=no-uuid
 echo ""
