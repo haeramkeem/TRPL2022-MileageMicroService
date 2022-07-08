@@ -1,4 +1,4 @@
-import { PointLog } from 'src/pointLogs';
+import { PointLog } from 'src/point-logs';
 import { Review } from 'src/reviews';
 import { Entity, OneToMany, PrimaryColumn } from 'typeorm';
 

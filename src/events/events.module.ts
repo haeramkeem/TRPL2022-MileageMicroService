@@ -5,7 +5,7 @@ import { TypeOrmExModule } from 'src/typeorm-ex/typeorm-ex.module';
 import { PlacesRepository } from 'src/places/places.repository';
 import { PhotosRepository } from 'src/photos/photos.repository';
 import { ReviewsRepository } from 'src/reviews/reviews.repository';
-import { PointLogsRepository } from 'src/pointLogs';
+import { PointLogsRepository } from 'src/point-logs';
 import { UsersRepository } from 'src/users';
 
 @Module({

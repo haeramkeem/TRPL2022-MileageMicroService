@@ -5,7 +5,7 @@ import { ActionType } from 'src/common/constants';
 import { PlacesRepository } from 'src/places';
 import { Photo, PhotosRepository } from 'src/photos';
 import { ReviewsRepository, Review } from 'src/reviews';
-import { PointLogsRepository } from 'src/pointLogs';
+import { PointLogsRepository } from 'src/point-logs';
 import { UsersRepository } from 'src/users';
 
 @Injectable()

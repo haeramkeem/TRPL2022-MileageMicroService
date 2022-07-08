@@ -1,6 +1,6 @@
 import { Repository } from 'typeorm';
 import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
-import { PointLog } from './entities/pointLog.entity';
+import { PointLog } from './entities/point-log.entity';
 import { User } from 'src/users';
 import { ActionType } from 'src/common/constants';
 
