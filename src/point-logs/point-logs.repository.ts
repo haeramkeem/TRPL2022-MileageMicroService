@@ -12,7 +12,7 @@ export class PointLogsRepository extends Repository<PointLog> {
         const pointLog = new PointLog();
         pointLog.owner = owner;
         pointLog.action = action;
-        pointLog.point = await this.safelyFindPointByOwnerId(owner.id);
+        pointLog.point = (await this.safelyFindPointByOwnerId(owner.id)) + diff;
 
         await this.save(pointLog);
     }
