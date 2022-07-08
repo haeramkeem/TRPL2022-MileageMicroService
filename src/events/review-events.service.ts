@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateDto, UpdateDto, RemoveDto } from './dto';
 import { DataSource } from 'typeorm';
-import { ActionType } from 'src/common/constants';
+import { EventsActionType } from './events.constant';
 import { PlacesRepository } from 'src/places';
 import { Photo, PhotosRepository } from 'src/photos';
 import { ReviewsRepository, Review } from 'src/reviews';
@@ -62,7 +62,7 @@ export class ReviewEventsService {
             // Insert point log
             await queryRunner.manager
                 .withRepository(this.pointLogRepository)
-                .saveOne(review.author, ActionType.ADD, commitPoint);
+                .saveOne(review.author, EventsActionType.ADD, commitPoint);
 
             // Commit transaction
             await queryRunner.commitTransaction();
@@ -128,7 +128,7 @@ export class ReviewEventsService {
             // Insert point log
             await queryRunner.manager
                 .withRepository(this.pointLogRepository)
-                .saveOne(review.author, ActionType.MOD, commitPoint - rollbackPoint);
+                .saveOne(review.author, EventsActionType.MOD, commitPoint - rollbackPoint);
 
             // Commit transaction
             await queryRunner.commitTransaction();
@@ -184,7 +184,7 @@ export class ReviewEventsService {
             // Insert point log
             await queryRunner.manager
                 .withRepository(this.pointLogRepository)
-                .saveOne(review.author, ActionType.DEL, -rollbackPoint);
+                .saveOne(review.author, EventsActionType.DEL, -rollbackPoint);
 
             // Commit transaction
             await queryRunner.commitTransaction();
