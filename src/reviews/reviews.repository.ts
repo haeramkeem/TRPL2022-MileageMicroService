@@ -2,7 +2,7 @@ import { Repository } from 'typeorm';
 import { CustomRepository } from 'src/typeorm-ex/typeorm-ex.decorator';
 import { Review } from './entities/review.entity';
 import { AddDuplicatedReviewError, ReviewInvalidError } from './reviews.error';
-import { FindOneDto } from './dto/findOne.dto';
+import { FindOneDto } from './dto/find-one.dto';
 
 @CustomRepository(Review)
 export class ReviewsRepository extends Repository<Review> {

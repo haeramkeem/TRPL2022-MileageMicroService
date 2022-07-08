@@ -1,6 +1,7 @@
-// Use TypeOrmExModule module to maintain the same style as typeorm@2.x
-// Ref: https://gist.github.com/anchan828/9e569f076e7bc18daf21c652f7c3d012
-
+/**
+ * Use TypeOrmExModule module to maintain the same style as typeorm@2.x
+ * @see https://gist.github.com/anchan828/9e569f076e7bc18daf21c652f7c3d012
+ */
 import { DynamicModule, Provider } from "@nestjs/common";
 import { getDataSourceToken } from "@nestjs/typeorm";
 import { DataSource } from "typeorm";

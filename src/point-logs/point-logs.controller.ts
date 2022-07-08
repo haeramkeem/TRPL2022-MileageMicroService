@@ -1,5 +1,5 @@
 import { Controller, Query, Get, Res } from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { ReqQueryDto } from './dto/req-query.dto';
 import { PointLogsService } from './point-logs.service';
 import { StatusCodes as http } from 'http-status-codes';
