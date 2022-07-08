@@ -9,7 +9,7 @@ import { PointLogsRepository } from 'src/point-logs';
 import { UsersRepository } from 'src/users';
 
 @Injectable()
-export class EventsService {
+export class ReviewEventsService {
     constructor(
         private readonly usersRepository: UsersRepository,
         private readonly placesRepository: PlacesRepository,

@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { EventsService } from './events.service';
+import { ReviewEventsService } from './review-events.service';
 import { EventsController } from './events.controller';
 import { TypeOrmExModule } from 'src/typeorm-ex/typeorm-ex.module';
 import { PlacesRepository } from 'src/places/places.repository';
@@ -19,6 +19,6 @@ import { UsersRepository } from 'src/users';
         ]),
     ],
     controllers: [ EventsController ],
-    providers: [ EventsService ]
+    providers: [ ReviewEventsService ]
 })
 export class EventsModule {}

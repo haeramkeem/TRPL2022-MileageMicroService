@@ -1,14 +1,14 @@
 import { Controller, Post, Body, Res } from '@nestjs/common';
-import { EventsService } from './events.service';
+import { ReviewEventsService } from './review-events.service';
 import { ActionType } from 'src/common/constants';
 import { Response } from 'express';
 import { BaseError, UnhandledError } from 'src/common/errors';
 import { ReqBodyDto, CreateDto, UpdateDto, RemoveDto } from './dto';
-import {StatusCodes} from 'http-status-codes';
+import { StatusCodes } from 'http-status-codes';
 
 @Controller('events')
 export class EventsController {
-    constructor(private readonly eventsService: EventsService) {}
+    constructor(private readonly reviewEventsService: ReviewEventsService) {}
 
     @Post()
     async post(
@@ -17,15 +17,15 @@ export class EventsController {
         try {
             switch(body.action) {
                 case ActionType.ADD:
-                    await this.eventsService.create(body as CreateDto);
+                    await this.reviewEventsService.create(body as CreateDto);
                     res.status(StatusCodes.CREATED).send({ error: null });
                     break;
                 case ActionType.MOD:
-                    await this.eventsService.update(body as UpdateDto);
+                    await this.reviewEventsService.update(body as UpdateDto);
                     res.status(StatusCodes.OK).send({ error: null });
                     break;
                 case ActionType.DEL:
-                    await this.eventsService.remove(body as RemoveDto);
+                    await this.reviewEventsService.remove(body as RemoveDto);
                     res.status(StatusCodes.OK).send({ error: null });
                     break;
             }
