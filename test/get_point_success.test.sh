@@ -20,7 +20,7 @@ INSERT INTO placeData (id) VALUES ('$PLACE');
 EOF
 
 # Gen review
-cat << EOF | curl_post localhost:60079/events &> /dev/null
+cat << EOF | curl_post localhost:60079/events
 {
     "type": "REVIEW",
     "action": "ADD",
@@ -35,5 +35,5 @@ EOF
 # Request -> must return { "error": null, "point": 3 }
 curl -v \
     --max-time 10 \
-    localhost:60079/point/$USER
+    localhost:60079/point?owner=$USER
 echo ""
