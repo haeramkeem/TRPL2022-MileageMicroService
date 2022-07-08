@@ -6,7 +6,12 @@ export class Photo {
     @PrimaryColumn('uuid')
     id: string;
 
-    @ManyToOne(() => Review, review => review.photos, { onDelete: 'CASCADE' })
+    @ManyToOne(() => Review, review => review.photos, {
+        onDelete: 'CASCADE',
+        onUpdate: 'CASCADE',
+        cascade: true,
+        nullable: false,
+    })
     attachedReview: Review;
 
     @DeleteDateColumn()
