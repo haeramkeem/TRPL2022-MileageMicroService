@@ -10,7 +10,8 @@
     "build": "nest build",
     "db:up": "docker compose -f db/docker-compose.yaml --env-file ./.example.env up -d",
     "db:down": "docker compose -f db/docker-compose.yaml --env-file ./.example.env down",
-    "start:dev": ". ./.example.env; nest start --watch"
+    "start:dev": ". ./.example.env; nest start --watch",
+    "start:prod": "docker compose --env-file ./.example.env up -d"
   },
   "dependencies": {
     "@nestjs/common": "^8.0.0",
